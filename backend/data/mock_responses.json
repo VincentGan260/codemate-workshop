@@ -1,0 +1,53 @@
+{
+  "profile_chat": {
+    "message": "李同学你好！我是你的学习伙伴 CodeBuddy 🎓 让我们从了解你开始吧～你目前在学哪几门课程呢？",
+    "extracted_fields": {},
+    "missing_fields": ["current_courses", "completed_courses", "knowledge_basis", "learning_difficulty", "programming_languages", "learning_style", "learning_goals", "resource_preference"]
+  },
+  "resources": {
+    "resource_cards": [
+      {
+        "id": "res-001",
+        "title": "递归调用栈详解",
+        "type": "个性化讲解文档",
+        "course": "程序设计基础",
+        "knowledge_point": "递归",
+        "difficulty": "入门",
+        "language": "Python",
+        "summary": "通过图解和代码逐步讲解递归调用栈的工作过程，适合递归概念不清晰的同学。"
+      },
+      {
+        "id": "res-002",
+        "title": "二叉树遍历实现",
+        "type": "代码示例与注释",
+        "course": "数据结构与算法",
+        "knowledge_point": "二叉树遍历",
+        "difficulty": "进阶",
+        "language": "Python",
+        "summary": "前序、中序、后序遍历的Python实现，包含详细注释和复杂度分析。"
+      }
+    ]
+  },
+  "path": {
+    "name": "从程序设计基础到数据结构入门的成长路径",
+    "nodes": [
+      {"id": "node-1", "name": "函数调用基础", "course": "程序设计基础", "goal": "理解函数调用机制", "duration": "2小时", "status": "pending"},
+      {"id": "node-2", "name": "数组与循环巩固", "course": "程序设计基础", "goal": "掌握数组遍历与操作", "duration": "3小时", "status": "pending"},
+      {"id": "node-3", "name": "递归概念与调用栈", "course": "程序设计基础", "goal": "理解递归思想和调用栈", "duration": "4小时", "status": "pending"},
+      {"id": "node-4", "name": "二叉树结构理解", "course": "数据结构与算法", "goal": "理解二叉树的结构和性质", "duration": "3小时", "status": "pending"},
+      {"id": "node-5", "name": "二叉树遍历代码实现", "course": "数据结构与算法", "goal": "掌握三种遍历方式的代码实现", "duration": "4小时", "status": "pending"},
+      {"id": "node-6", "name": "分层练习与错题修正", "course": "数据结构与算法", "goal": "通过练习巩固，修正易错点", "duration": "3小时", "status": "pending"},
+      {"id": "node-7", "name": "文件目录树项目案例", "course": "数据结构与算法", "goal": "综合应用树结构解决实际问题", "duration": "5小时", "status": "pending"}
+    ]
+  },
+  "assessment": {
+    "score": 75,
+    "total": 100,
+    "growth": {"knowledge_base": 5, "practice_ability": 4},
+    "badges": ["二叉树探索者"],
+    "remedial_resources": [
+      {"knowledge_point": "递归出口", "reason": "2道题目均与递归边界条件有关"},
+      {"knowledge_point": "遍历顺序", "reason": "后序遍历顺序需加强练习"}
+    ]
+  }
+}
