@@ -1,38 +1,49 @@
 import { useEffect, useState } from 'react'
-import { Sparkles, BookOpen, GitBranch, Users, Zap, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+  Sparkles, BookOpen, GitBranch, Users, Zap, ArrowRight,
+  MessageCircle, Search, FileText, ClipboardCheck,
+  UserRound, Map, Terminal,
+} from 'lucide-react'
 import { getCourses } from '../services/api'
 import type { Course } from '../types'
-
-const agents = [
-  'Profile Agent', 'Course Map Agent', 'Diagnosis Agent', 'Resource Agent',
-  'Code Practice Agent', 'Path Planning Agent', 'Assessment Agent',
-]
+import AnimatedSection from '../components/common/AnimatedSection'
 
 const flowSteps = [
-  { label: '多轮对话', icon: Users },
+  { label: '多轮对话', icon: MessageCircle },
   { label: '画像生成', icon: Sparkles },
-  { label: '课程诊断', icon: Zap },
-  { label: '资源生成', icon: File },
+  { label: '课程诊断', icon: Search },
+  { label: '资源生成', icon: FileText },
   { label: '路径规划', icon: GitBranch },
-  { label: '辅导评估', icon: Clipboard },
+  { label: '辅导评估', icon: ClipboardCheck },
 ]
 
-// Inline Clipboard icon component
-function Clipboard() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-      <path d="M9 14h6"/><path d="M9 18h3"/>
-    </svg>
-  )
+const agents = [
+  { name: 'Profile Agent', role: '学习画像构建', icon: UserRound, bg: 'bg-primary-400/20', fg: 'text-primary-500' },
+  { name: 'Course Map Agent', role: '课程群关系分析', icon: Map, bg: 'bg-primary-500/20', fg: 'text-primary-600' },
+  { name: 'Diagnosis Agent', role: '学习困难诊断', icon: Search, bg: 'bg-purple-400/20', fg: 'text-purple-500' },
+  { name: 'Resource Agent', role: '个性化资源生成', icon: FileText, bg: 'bg-primary-600/20', fg: 'text-primary-700' },
+  { name: 'Code Practice Agent', role: '代码练习辅导', icon: Terminal, bg: 'bg-purple-500/20', fg: 'text-purple-600' },
+  { name: 'Path Planning Agent', role: '学习路径规划', icon: GitBranch, bg: 'bg-primary-700/20', fg: 'text-primary-700' },
+  { name: 'Assessment Agent', role: '学习效果评估', icon: ClipboardCheck, bg: 'bg-purple-600/20', fg: 'text-purple-700' },
+]
+
+const courseAccents: Record<string, string> = {
+  '程序设计基础': 'border-l-primary-400',
+  '数据结构与算法': 'border-l-primary-600',
+  '计算机组成原理': 'border-l-purple-400',
+  '操作系统': 'border-l-primary-500',
+  '计算机网络': 'border-l-purple-500',
+  '数据库系统': 'border-l-primary-700',
 }
 
-function File() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>
-    </svg>
-  )
+const stageColors: Record<string, string> = {
+  '大一上': 'bg-primary-50 text-primary-600',
+  '大一下': 'bg-blue-50 text-blue-600',
+  '大二上': 'bg-purple-50 text-purple-600',
+  '大二下': 'bg-indigo-50 text-indigo-600',
+  '大三上': 'bg-violet-50 text-violet-600',
 }
 
 export default function Dashboard() {
@@ -43,94 +54,263 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
-      {/* Hero */}
-      <section className="text-center py-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-4">
-          <Sparkles className="w-4 h-4" />
-          CodeBuddy 在线陪伴学习
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">CodeMate 智学工坊</h1>
-        <p className="text-gray-500 text-base max-w-2xl mx-auto">
-          面向计算机科学与技术专业课程群的个性化学习资源智能体平台——通过 CodeBuddy 多轮对话构建画像、生成资源、规划路径并辅导评估。
-        </p>
-      </section>
+    <div className="p-8 max-w-5xl mx-auto space-y-10 pb-12">
+      {/* ========== Section 1: Hero ========== */}
+      <AnimatedSection className="relative text-center py-10">
+        {/* Decorative blur blobs */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary-400/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-10 w-72 h-72 rounded-full bg-purple-400/8 blur-3xl pointer-events-none" />
 
-      {/* Course Overview */}
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-800">课程群概览</h2>
+        <div className="relative">
+          {/* Badge pill */}
+          <motion.div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-5 border border-primary-100/50"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+            <Sparkles className="w-4 h-4" />
+            CodeBuddy 在线陪伴学习
+          </motion.div>
+
+          {/* Title */}
+          <h1 className="text-4xl font-bold mb-3 tracking-tight">
+            <span className="gradient-text">CodeMate 智学工坊</span>
+          </h1>
+
+          {/* Decorative underline */}
+          <div className="flex items-center justify-center gap-1 mb-4">
+            <div className="w-8 h-0.5 rounded-full bg-primary-400" />
+            <div className="w-12 h-0.5 rounded-full bg-primary-500" />
+            <div className="w-8 h-0.5 rounded-full bg-purple-400" />
+          </div>
+
+          {/* Subtitle */}
+          <p className="text-gray-500 text-base max-w-2xl mx-auto mb-7 leading-relaxed">
+            让计算机学习更清晰，让个性化资源更懂你
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 text-white text-sm font-medium shadow-md hover:shadow-glow hover:-translate-y-0.5 transition-all duration-200"
+            >
+              开始构建画像
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/courses"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-primary-200 text-primary-700 text-sm font-medium bg-white/80 hover:bg-white hover:shadow-card transition-all duration-200"
+            >
+              查看课程中心
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* ========== Section 2: Course Overview ========== */}
+      <AnimatedSection delay={0.1}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-primary-600" />
+            <h2 className="text-lg font-semibold text-gray-800">课程群概览</h2>
+          </div>
+          <Link
+            to="/courses"
+            className="flex items-center gap-1 text-xs text-primary-500 hover:text-primary-700 transition-colors font-medium"
+          >
+            查看全部 <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          {courses.map((c) => (
-            <div
-              key={c.id}
-              className="bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-shadow border border-gray-100"
-            >
-              <h3 className="font-semibold text-gray-800 mb-1">{c.name}</h3>
-              <p className="text-xs text-gray-400 mb-2">{c.stage} · {c.knowledge_points.length} 个核心知识点</p>
-              <p className="text-sm text-gray-500 line-clamp-2">{c.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          {courses.map((c, i) => {
+            const accent = courseAccents[c.name] || 'border-l-primary-400'
+            const stageClass = stageColors[c.stage] || 'bg-gray-50 text-gray-600'
+            const isFirst = c.name === '程序设计基础'
 
-      {/* System Flow */}
-      <section>
+            return (
+              <motion.div
+                key={c.id}
+                className={`bg-white rounded-2xl p-5 shadow-card hover:shadow-card-hover border border-gray-100 border-l-4 ${accent} transition-colors`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -3 }}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-gray-800 text-sm">{c.name}</h3>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${stageClass}`}>
+                    {c.stage}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">
+                  {c.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">
+                    {c.knowledge_points.length} 个核心知识点
+                  </span>
+                  {isFirst && (
+                    <span className="text-[10px] text-primary-500 font-medium flex items-center gap-0.5">
+                      先修 <ArrowRight className="w-3 h-3" /> 数据结构
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      </AnimatedSection>
+
+      {/* ========== Section 3: System Flow ========== */}
+      <AnimatedSection delay={0.15}>
         <div className="flex items-center gap-2 mb-4">
           <GitBranch className="w-5 h-5 text-primary-600" />
           <h2 className="text-lg font-semibold text-gray-800">系统流程</h2>
         </div>
-        <div className="flex items-center justify-between bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-          {flowSteps.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-2">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-600">
-                    <step.icon />
-                  </span>
-                </div>
-                <span className="text-xs text-gray-600 font-medium">{step.label}</span>
-              </div>
-              {i < flowSteps.length - 1 && (
-                <ArrowRight className="w-4 h-4 text-gray-300 mx-1" />
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+        <div className="bg-white rounded-2xl p-6 shadow-card border border-gray-100 overflow-x-auto">
+          <div className="flex items-start justify-between min-w-[720px]">
+            {flowSteps.flatMap((step, i) => {
+              const stepEl = (
+                <motion.div
+                  key={step.label}
+                  className="flex flex-col items-center gap-2 shrink-0"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 + i * 0.1, duration: 0.4 }}
+                >
+                  <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center shadow-sm"
+                    style={{
+                      background: `linear-gradient(135deg, hsl(${250 + i * 10}, 80%, ${75 - i * 5}%), hsl(${260 + i * 10}, 70%, ${65 - i * 4}%))`,
+                    }}
+                  >
+                    <step.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium whitespace-nowrap">{step.label}</span>
+                </motion.div>
+              )
 
-      {/* Agents */}
-      <section>
+              if (i === flowSteps.length - 1) return [stepEl]
+
+              return [
+                stepEl,
+                <div key={`arrow-${i}`} className="pt-[6px] shrink-0">
+                  <ArrowRight className="w-8 h-8 text-primary-300" strokeWidth={2.5} />
+                </div>,
+              ]
+            })}
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* ========== Section 4: Multi-Agent Collaboration ========== */}
+      <AnimatedSection delay={0.2}>
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary-600" />
           <h2 className="text-lg font-semibold text-gray-800">多智能体协作</h2>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {agents.map((agent) => (
-            <span
-              key={agent}
-              className="px-3 py-1.5 bg-white rounded-full text-sm text-gray-600 shadow-card border border-gray-100 hover:border-primary-300 hover:text-primary-700 transition-colors"
+        <div className="grid grid-cols-4 gap-3">
+          {agents.slice(0, 4).map((agent, i) => (
+            <motion.div
+              key={agent.name}
+              className="bg-white rounded-2xl p-4 shadow-card border border-gray-100 hover:shadow-card-hover transition-colors cursor-default"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 + i * 0.06, duration: 0.4 }}
+              whileHover={{ y: -3 }}
             >
-              {agent}
-            </span>
+              <div className={`w-9 h-9 rounded-xl ${agent.bg} flex items-center justify-center mb-2.5`}>
+                <agent.icon className={`w-4 h-4 ${agent.fg}`} />
+              </div>
+              <p className="text-sm font-semibold text-gray-800 mb-0.5">{agent.name}</p>
+              <p className="text-[11px] text-gray-400">{agent.role}</p>
+            </motion.div>
           ))}
         </div>
-      </section>
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          {agents.slice(4).map((agent, i) => (
+            <motion.div
+              key={agent.name}
+              className="bg-white rounded-2xl p-4 shadow-card border border-gray-100 hover:shadow-card-hover transition-colors cursor-default"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.35 + i * 0.06, duration: 0.4 }}
+              whileHover={{ y: -3 }}
+            >
+              <div className={`w-9 h-9 rounded-xl ${agent.bg} flex items-center justify-center mb-2.5`}>
+                <agent.icon className={`w-4 h-4 ${agent.fg}`} />
+              </div>
+              <p className="text-sm font-semibold text-gray-800 mb-0.5">{agent.name}</p>
+              <p className="text-[11px] text-gray-400">{agent.role}</p>
+            </motion.div>
+          ))}
+        </div>
+      </AnimatedSection>
 
-      {/* Demo Scenario */}
-      <section className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-2xl p-6 border border-primary-100">
-        <div className="flex items-center gap-2 mb-3">
+      {/* ========== Section 5: Demo Scenario ========== */}
+      <AnimatedSection delay={0.25}>
+        <div className="flex items-center gap-2 mb-4">
           <Zap className="w-5 h-5 text-primary-600" />
           <h2 className="text-lg font-semibold text-gray-800">默认演示场景</h2>
         </div>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          李同学（计算机专业大二学生）从<strong>程序设计基础</strong>过渡到<strong>数据结构与算法</strong>的学习。
-          系统通过 CodeBuddy 多轮对话了解她的 Python/C 基础、对递归和数组操作的困惑，
-          以及她对图示讲解和代码案例的偏好，帮她生成个性化学习资源并规划成长路径。
-        </p>
-      </section>
+        <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-2xl p-6 border border-primary-100/50">
+          {/* Student info row */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+              李
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">
+                李同学
+                <span className="text-xs text-gray-400 font-normal ml-2">
+                  计算机科学与技术专业 · 大二
+                </span>
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                程序设计基础 → 数据结构与算法
+              </p>
+            </div>
+          </div>
+
+          {/* Scenario description */}
+          <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            李同学正从<strong className="text-gray-800">程序设计基础</strong>过渡到
+            <strong className="text-gray-800">数据结构与算法</strong>的学习，
+            她对<strong className="text-primary-600">函数调用</strong>、
+            <strong className="text-primary-600">递归</strong>、
+            <strong className="text-primary-600">数组操作</strong>和
+            <strong className="text-primary-600">二叉树遍历</strong>理解不够清晰，
+            偏好图示讲解、代码案例和分层练习题。
+          </p>
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-gray-400 font-medium">学习难点</span>
+              {['函数调用', '递归', '数组操作', '二叉树遍历'].map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-primary-600 text-[11px] font-medium border border-primary-100">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-gray-400 font-medium">偏好方式</span>
+              {['图示讲解', '代码案例', '分层练习'].map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-purple-600 text-[11px] font-medium border border-purple-100">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AnimatedSection>
     </div>
   )
 }
