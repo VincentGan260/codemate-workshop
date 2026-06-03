@@ -11,7 +11,8 @@ import type {
 } from '../types'
 import { mockProfileChat, mockStudentProfile } from '../mock/profile'
 import { mockCourses } from '../mock/courses'
-import { mockResources } from '../mock/resources'
+import { mockResources, generateResourcesMock } from '../mock/resources'
+import type { ResourceGenerateParams } from '../types'
 import { mockLearningPath } from '../mock/path'
 import { mockQuestions, mockAssessmentResult, mockTutorResponse } from '../mock/assessment'
 
@@ -62,14 +63,8 @@ export async function getCourseById(courseId: string) {
 
 // ========== Resources ==========
 
-export async function generateResources(params: {
-  course_id: string
-  knowledge_point: string
-  difficulty?: string
-  language?: string
-  resource_types?: string[]
-}) {
-  if (USE_MOCK) return mockResources
+export async function generateResources(params: ResourceGenerateParams) {
+  if (USE_MOCK) return { resource_cards: generateResourcesMock(params) }
   return request<ResourceGenerateResponse>('/resources/generate', {
     method: 'POST',
     body: JSON.stringify(params),

@@ -50,6 +50,13 @@ export interface CourseListResponse {
 
 // ========== Resources ==========
 
+export interface ResourceSection {
+  heading: string
+  content: string
+  codeBlock?: string
+  language?: string
+}
+
 export interface ResourceCard {
   id: string
   title: string
@@ -58,14 +65,50 @@ export interface ResourceCard {
   knowledge_point: string
   difficulty: string
   language: string
+  teaching_style?: string
   summary: string
+  match_reason?: string
+  detailed_content?: string
+  sections?: ResourceSection[]
+  key_concepts?: string[]
+  learning_tips?: string[]
+  learning_objectives?: string
+  recommended_usage?: string
+  profile_dimension?: string
+  next_steps?: string
+  estimated_time?: string
+  student_name?: string
+  generated_at?: string
+  added_to_path?: boolean
 }
 
 export interface ResourceGenerateResponse {
   resource_cards: ResourceCard[]
 }
 
+export interface ResourceGenerateParams {
+  course_id: string
+  learning_topic: string
+  difficulty?: string
+  language?: string
+  teaching_style?: string
+  resource_types?: string[]
+}
+
 // ========== Learning Path ==========
+
+export interface PathResourceItem {
+  resourceId: string
+  title: string
+  type: string
+  estimatedTime: string
+  topic: string
+  course: string
+  language: string
+  note: string
+  purpose: '课前预习' | '课堂理解' | '课后练习' | '项目实践' | '错题复习' | ''
+  priority: '必学' | '推荐' | '拓展' | ''
+}
 
 export interface PathNode {
   id: string

@@ -1,177 +1,230 @@
-import { useState } from 'react'
-import { FileText, Settings2, Wrench, Sparkles, ChevronDown } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { FileText } from 'lucide-react'
 import { generateResources } from '../services/api'
-import type { ResourceCard } from '../types'
+import type { ResourceCard, PathResourceItem } from '../types'
+import ResourceWorkbench from '../components/resources/ResourceWorkbench'
+import type { WorkbenchParams } from '../components/resources/ResourceWorkbench'
+import ResourceCardComponent from '../components/resources/ResourceCard'
+import ResourceDetailPanel from '../components/resources/ResourceDetailPanel'
+import AgentGenerationStatus from '../components/resources/AgentGenerationStatus'
+import PathResourcePackage from '../components/resources/PathResourcePackage'
+import AnimatedSection from '../components/common/AnimatedSection'
+import {
+  loadPathResources, addPathResource, removePathResource,
+  updatePathResource, clearPathResources,
+} from '../utils/pathResources'
 
-const COURSES = [
-  { id: 'programming-basics', name: '程序设计基础' },
-  { id: 'data-structures', name: '数据结构与算法' },
-]
-const KNOWLEDGE_POINTS: Record<string, string[]> = {
-  'programming-basics': ['递归', '函数', '数组', '条件与循环', '基础调试'],
-  'data-structures': ['二叉树遍历', '递归思想', '排序算法', '栈与队列', '时间复杂度'],
-}
-const RESOURCE_TYPES = ['讲解文档', '思维导图', '代码示例', '分层练习', '拓展阅读', '项目案例']
+type Phase = 'config' | 'generating' | 'done'
 
 export default function ResourceGen() {
-  const [courseId, setCourseId] = useState('programming-basics')
-  const [knowledgePt, setKnowledgePt] = useState('递归')
-  const [difficulty, setDifficulty] = useState('入门')
-  const [language, setLanguage] = useState('Python')
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(['讲解文档', '代码示例'])
+  const [phase, setPhase] = useState<Phase>('config')
   const [resources, setResources] = useState<ResourceCard[]>([])
+  const [detailResource, setDetailResource] = useState<ResourceCard | null>(null)
+  const [pendingParams, setPendingParams] = useState<WorkbenchParams | null>(null)
+  const [pathItems, setPathItems] = useState<PathResourceItem[]>(() => loadPathResources())
+  const [toast, setToast] = useState<string | null>(null)
 
-  const handleGenerate = async () => {
-    const res = await generateResources({
-      course_id: courseId,
-      knowledge_point: knowledgePt,
-      difficulty,
-      language,
-      resource_types: selectedTypes,
-    })
-    setResources(res.resource_cards)
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2000)
   }
 
+  const handleGenerate = (params: WorkbenchParams) => {
+    setPendingParams(params)
+    setPhase('generating')
+    setResources([])
+  }
+
+  const handleGenerationComplete = async () => {
+    const p = pendingParams
+    const res = await generateResources({
+      course_id: p?.courseId ?? 'data-structures',
+      learning_topic: p?.learningTopic ?? '二叉树遍历',
+      difficulty: p?.difficulty ?? '基础',
+      language: p?.language ?? 'Python',
+      resource_types: p?.selectedTypes ?? [],
+    })
+    // Sync added_to_path with current localStorage state
+    const pathIds = new Set(pathItems.map((i) => i.resourceId))
+    const synced = res.resource_cards.map((r) => ({
+      ...r,
+      added_to_path: pathIds.has(r.id),
+    }))
+    setResources(synced)
+    setPhase('done')
+  }
+
+  const handleAddToPath = useCallback((id: string) => {
+    const resource = resources.find((r) => r.id === id)
+    if (!resource) return
+
+    const alreadyInPath = pathItems.some((i) => i.resourceId === id)
+
+    if (alreadyInPath) {
+      // Remove from path
+      const updated = removePathResource(id)
+      setPathItems(updated)
+      setResources((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, added_to_path: false } : r)),
+      )
+      if (detailResource?.id === id) {
+        setDetailResource((prev) => prev ? { ...prev, added_to_path: false } : null)
+      }
+      showToast('已从资源包移除')
+    } else {
+      // Add to path
+      const item: PathResourceItem = {
+        resourceId: resource.id,
+        title: resource.title,
+        type: resource.type,
+        estimatedTime: resource.estimated_time || '0 分钟',
+        topic: resource.knowledge_point,
+        course: resource.course,
+        language: resource.language,
+        note: '',
+        purpose: '',
+        priority: '',
+      }
+      const updated = addPathResource(item)
+      setPathItems(updated)
+      setResources((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, added_to_path: true } : r)),
+      )
+      if (detailResource?.id === id) {
+        setDetailResource((prev) => prev ? { ...prev, added_to_path: true } : null)
+      }
+      showToast('已加入学习路径资源包')
+    }
+  }, [resources, pathItems, detailResource])
+
+  const handleRemoveFromPath = useCallback((resourceId: string) => {
+    const updated = removePathResource(resourceId)
+    setPathItems(updated)
+    setResources((prev) =>
+      prev.map((r) => (r.id === resourceId ? { ...r, added_to_path: false } : r)),
+    )
+    if (detailResource?.id === resourceId) {
+      setDetailResource((prev) => prev ? { ...prev, added_to_path: false } : null)
+    }
+  }, [detailResource])
+
+  const handleUpdatePathItem = useCallback((resourceId: string, updates: { note?: string; purpose?: string; priority?: string }) => {
+    const cleanUpdates: { note?: string; purpose?: PathResourceItem['purpose']; priority?: PathResourceItem['priority'] } = {}
+    if (updates.note !== undefined) cleanUpdates.note = updates.note
+    if (updates.purpose !== undefined) cleanUpdates.purpose = updates.purpose as PathResourceItem['purpose']
+    if (updates.priority !== undefined) cleanUpdates.priority = updates.priority as PathResourceItem['priority']
+    const updated = updatePathResource(resourceId, cleanUpdates)
+    setPathItems(updated)
+  }, [])
+
+  const handleClearPath = useCallback(() => {
+    clearPathResources()
+    setPathItems([])
+    setResources((prev) =>
+      prev.map((r) => ({ ...r, added_to_path: false })),
+    )
+    if (detailResource) {
+      setDetailResource((prev) => prev ? { ...prev, added_to_path: false } : null)
+    }
+  }, [detailResource])
+
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <FileText className="w-6 h-6 text-primary-600" />
-          <h1 className="text-2xl font-bold text-gray-900">资源生成</h1>
-        </div>
-        <p className="text-sm text-gray-500">选择课程、知识点和资源类型，CodeBuddy 智能体将为你生成个性化学习资源。</p>
-      </div>
-
-      {/* Workbench Controls */}
-      <div className="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
-        <div className="flex items-center gap-2 mb-4">
-          <Settings2 className="w-5 h-5 text-primary-600" />
-          <h2 className="font-semibold text-gray-800">资源生成工作台</h2>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Course */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">课程</label>
-            <select
-              value={courseId}
-              onChange={(e) => { setCourseId(e.target.value); setKnowledgePt(KNOWLEDGE_POINTS[e.target.value][0]) }}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 bg-white"
-            >
-              {COURSES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-
-          {/* Knowledge Point */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">知识点</label>
-            <select
-              value={knowledgePt}
-              onChange={(e) => setKnowledgePt(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 bg-white"
-            >
-              {(KNOWLEDGE_POINTS[courseId] ?? []).map((kp) => <option key={kp} value={kp}>{kp}</option>)}
-            </select>
-          </div>
-
-          {/* Difficulty */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">难度</label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 bg-white"
-            >
-              {['入门', '进阶', '综合'].map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-
-          {/* Language */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">编程语言</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 bg-white"
-            >
-              {['Python', 'C', 'C++', 'Java'].map((l) => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* Resource Types */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-2">资源类型</label>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {RESOURCE_TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() =>
-                  setSelectedTypes((prev) =>
-                    prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                  selectedTypes.includes(t)
-                    ? 'bg-primary-50 border-primary-300 text-primary-700'
-                    : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={handleGenerate}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-purple-600 text-white rounded-xl font-medium text-sm hover:from-primary-600 hover:to-purple-700 transition-all shadow-sm"
-        >
-          <Sparkles className="w-4 h-4" />
-          生成资源
-        </button>
-      </div>
-
-      {/* Generated Resources */}
-      {resources.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-primary-600" />
-            <h2 className="font-semibold text-gray-800">生成的资源</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {resources.map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl p-4 shadow-card border border-gray-100 hover:shadow-card-hover transition-shadow">
-                <div className="flex items-start justify-between mb-2">
-                  <span className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full text-[11px] font-medium">
-                    {r.type}
-                  </span>
-                  <span className="text-[11px] text-gray-400">{r.difficulty}</span>
-                </div>
-                <h3 className="font-semibold text-gray-800 text-sm mb-1">{r.title}</h3>
-                <p className="text-xs text-gray-400 mb-2">{r.course} · {r.knowledge_point} · {r.language}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">{r.summary}</p>
-              </div>
-            ))}
-          </div>
+    <div className="p-8 max-w-5xl mx-auto space-y-6 pb-12">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[100] px-4 py-2 rounded-xl bg-gray-900 text-white text-xs shadow-lg animate-fade-in">
+          {toast}
         </div>
       )}
 
-      {/* Agent Status Column (placeholder) */}
-      <div className="bg-white rounded-2xl p-4 shadow-card border border-gray-100">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-primary-500" />
-          <span className="text-sm font-medium text-gray-700">智能体状态</span>
+      {/* Header */}
+      <AnimatedSection>
+        <div className="flex items-center gap-2">
+          <FileText className="w-6 h-6 text-primary-600" />
+          <h1 className="text-2xl font-bold text-gray-900">个性化学习资源生成</h1>
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          {['Diagnosis Agent', 'Resource Agent', 'Code Practice Agent', 'Assessment Agent'].map((agent) => (
-            <div key={agent} className="flex items-center gap-2 text-xs text-gray-500">
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              {agent} — 就绪
+      </AnimatedSection>
+
+      {/* Main layout */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left: Workbench + Results */}
+        <div className="col-span-8 space-y-5">
+          <AnimatedSection delay={0.05}>
+            <ResourceWorkbench onGenerate={handleGenerate} generating={phase === 'generating'} />
+          </AnimatedSection>
+
+          {phase === 'generating' && (
+            <AnimatedSection delay={0.05}>
+              <AgentGenerationStatus active={true} onComplete={handleGenerationComplete} />
+            </AnimatedSection>
+          )}
+
+          {phase === 'done' && resources.length > 0 && (
+            <AnimatedSection delay={0.05}>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary-600" />
+                  <h2 className="text-sm font-semibold text-gray-800">生成结果</h2>
+                  <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+                    {resources.length} 项资源
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {resources.map((r, i) => (
+                    <ResourceCardComponent
+                      key={r.id}
+                      resource={r}
+                      index={i}
+                      onAddToPath={handleAddToPath}
+                      onViewDetail={setDetailResource}
+                    />
+                  ))}
+                </div>
+              </div>
+            </AnimatedSection>
+          )}
+        </div>
+
+        {/* Right: Path Resource Package + Agent Status */}
+        <div className="col-span-4 space-y-3">
+          <AnimatedSection delay={0.1} direction="right">
+            <PathResourcePackage
+              items={pathItems}
+              onRemove={handleRemoveFromPath}
+              onUpdate={handleUpdatePathItem}
+              onClear={handleClearPath}
+              onToast={showToast}
+            />
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.15} direction="right">
+            <div className="bg-white rounded-2xl p-4 shadow-card border border-gray-100">
+              <span className="text-[10px] text-gray-400 block mb-2">智能体状态</span>
+              <div className="space-y-1.5">
+                {[
+                  { label: '诊断分析', color: 'bg-blue-400' },
+                  { label: '资源生成', color: 'bg-primary-400' },
+                  { label: '代码实践', color: 'bg-emerald-400' },
+                  { label: '评估校验', color: 'bg-amber-400' },
+                ].map((a) => (
+                  <div key={a.label} className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${a.color}`} />
+                    <span className="text-[10px] text-gray-500 flex-1">{a.label}</span>
+                    <span className="text-[9px] text-green-600 font-medium">就绪</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          </AnimatedSection>
         </div>
       </div>
+
+      {/* Detail Panel */}
+      <ResourceDetailPanel
+        resource={detailResource}
+        onClose={() => setDetailResource(null)}
+        onAddToPath={handleAddToPath}
+      />
     </div>
   )
 }
