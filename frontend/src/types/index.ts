@@ -38,6 +38,10 @@ export interface Course {
   related_courses: string[]
   knowledge_points: string[]
   resource_types: string[]
+  positioning?: '重点演示' | '课程群支撑'
+  typical_difficulties?: string[]
+  learning_suggestion?: string
+  color?: string
 }
 
 export interface CourseListResponse {
