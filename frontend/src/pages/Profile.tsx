@@ -1,128 +1,182 @@
-import { useEffect, useState } from 'react'
-import { UserRound, MessageCircle, Brain, Star, Target, Lightbulb, AlertCircle } from 'lucide-react'
-import { generateProfile, profileChat } from '../services/api'
-import type { StudentProfile } from '../types'
+import { useState, useCallback } from 'react'
+import { UserRound } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import CodeBuddyAvatar from '../components/profile/CodeBuddyAvatar'
+import ChatPanel from '../components/profile/ChatPanel'
+import ProfileDraftPanel from '../components/profile/ProfileDraftPanel'
+import DiagnosisQuiz from '../components/profile/DiagnosisQuiz'
+import LearningProfileCard from '../components/profile/LearningProfileCard'
+import {
+  createInitialState,
+  processMessage,
+  startDiagnosis,
+  submitDiagnosis,
+  generateProfile,
+  applyDemoFill,
+  ALL_FIELDS,
+  type InterviewState,
+} from '../services/profileInterview'
+
+type BuddyState = 'welcome' | 'thinking' | 'generating'
 
 export default function Profile() {
-  const [profile, setProfile] = useState<StudentProfile | null>(null)
-  const [chatMsg, setChatMsg] = useState('')
+  const [state, setState] = useState<InterviewState>(createInitialState)
+  const [buddyState, setBuddyState] = useState<BuddyState>('welcome')
+  const [diagnosisAnswers, setDiagnosisAnswers] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    generateProfile().then(setProfile).catch(() => {})
-    profileChat('').then((res) => setChatMsg(res.message)).catch(() => {})
+  const conversationFields = ALL_FIELDS.filter((f) => f.key !== 'diagnosis_result').map((f) => f.key)
+  const collectedConvFields = conversationFields.filter((k) => k in state.collectedFields)
+  const missingConvFields = conversationFields.filter((k) => !(k in state.collectedFields))
+
+  const isChatActive = state.stage === 'collecting' || state.stage === 'greeting'
+  const showDemoBtn = state.stage === 'collecting' && Object.keys(state.collectedFields).length === 0
+
+  // ---- Handlers ----
+
+  const handleSend = useCallback((text: string) => {
+    if (!isChatActive) return
+
+    setBuddyState('thinking')
+
+    // Simulate processing delay then advance
+    setTimeout(() => {
+      setState((prev) => processMessage(prev, text))
+      setBuddyState('welcome')
+    }, 800)
+  }, [isChatActive])
+
+  const handleDemoFill = useCallback(() => {
+    setBuddyState('thinking')
+    setTimeout(() => {
+      setState((prev) => applyDemoFill(prev))
+      setBuddyState('welcome')
+    }, 500)
   }, [])
 
-  if (!profile) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
-        <p className="text-gray-400">加载中...</p>
-      </div>
-    )
-  }
+  const handleStartDiagnosis = useCallback(() => {
+    setState((prev) => startDiagnosis(prev))
+  }, [])
 
-  const { student, profile: dims } = profile
+  const handleDiagnosisSubmit = useCallback((answers: Record<string, string>) => {
+    setDiagnosisAnswers(answers)
+    setBuddyState('generating')
+    setTimeout(() => {
+      setState((prev) => submitDiagnosis(prev, answers))
+      setBuddyState('welcome')
+    }, 600)
+  }, [])
+
+  const handleGenerateProfile = useCallback(() => {
+    setBuddyState('generating')
+    setTimeout(() => {
+      setState((prev) => generateProfile(prev))
+      setBuddyState('welcome')
+    }, 1500)
+  }, [])
+
+  // ---- Render ----
+
+  const buddyStateForAvatar: BuddyState =
+    state.stage === 'generating' ? 'generating' : buddyState
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-8 max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <UserRound className="w-6 h-6 text-primary-600" />
-          <h1 className="text-2xl font-bold text-gray-900">学习画像</h1>
-        </div>
-        <p className="text-sm text-gray-500">通过 CodeBuddy 多轮对话 + 轻量诊断题，动态生成与更新六维学习画像。</p>
+      <div className="flex items-center gap-2">
+        <UserRound className="w-6 h-6 text-primary-600" />
+        <h1 className="text-2xl font-bold text-gray-900">学习画像</h1>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Left: CodeBuddy Chat Area */}
-        <div className="col-span-1 space-y-4">
-          <div className="bg-white rounded-2xl p-5 shadow-card border border-gray-100 text-center">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary-400 to-purple-500 flex items-center justify-center">
-              <MessageCircle className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="font-semibold text-gray-800">CodeBuddy</h3>
-            <p className="text-xs text-gray-400 mt-1">Q 版数字人学习伙伴</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-card border border-gray-100">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <MessageCircle className="w-4 h-4 text-primary-600" />
+      <AnimatePresence mode="wait">
+        {state.stage !== 'complete' ? (
+          /* ===== Chat / Diagnosis Phase ===== */
+          <motion.div
+            key="build-phase"
+            className="grid grid-cols-12 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Left: CodeBuddy + Chat */}
+            <div className="col-span-7 space-y-4">
+              {/* CodeBuddy Avatar */}
+              <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-5">
+                <CodeBuddyAvatar state={buddyStateForAvatar} />
+                {showDemoBtn && (
+                  <motion.button
+                    onClick={handleDemoFill}
+                    className="mt-3 w-full py-2 rounded-xl border border-dashed border-primary-300 text-primary-500 text-xs font-medium hover:bg-primary-50 transition-colors"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    使用李同学示例 →
+                  </motion.button>
+                )}
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{chatMsg || '正在连接 CodeBuddy...'}</p>
-            </div>
-          </div>
 
-          <div className="bg-primary-50 rounded-2xl p-4 border border-primary-100">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="w-4 h-4 text-primary-500" />
-              <span className="text-xs font-medium text-primary-700">待收集信息</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {['当前课程', '已学课程', '知识基础', '学习困难', '编程语言', '学习偏好', '学习目标', '资源偏好'].map((f) => (
-                <span key={f} className="px-2 py-0.5 bg-white rounded-full text-[11px] text-gray-500 border border-gray-200">
-                  {f}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Profile Display */}
-        <div className="col-span-2 space-y-4">
-          {/* Student Info Card */}
-          <div className="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                {student.name[0]}
+              {/* Chat or Diagnosis */}
+              <div className="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                {state.stage === 'diagnosis' ? (
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-gray-800 mb-1">轻量诊断题</p>
+                    <p className="text-xs text-gray-400 mb-4">
+                      回答以下 {state.diagnosisQuestions.length} 道题，帮助 CodeBuddy 更准确地了解你的知识基础
+                    </p>
+                    <DiagnosisQuiz
+                      questions={state.diagnosisQuestions}
+                      onSubmit={handleDiagnosisSubmit}
+                      submitted={state.diagnosisEvaluated}
+                      userAnswers={diagnosisAnswers}
+                    />
+                  </div>
+                ) : (
+                  <ChatPanel
+                    messages={state.messages}
+                    onSend={handleSend}
+                    disabled={!isChatActive}
+                    hint={
+                      state.stage === 'ready_for_diagnosis'
+                        ? '点击右侧「进入诊断题」继续'
+                        : state.stage === 'ready_for_profile'
+                          ? '点击右侧「生成学习画像」查看完整画像'
+                          : undefined
+                    }
+                    currentRound={collectedConvFields.length}
+                    totalRounds={conversationFields.length}
+                  />
+                )}
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">{student.name}</h3>
-                <p className="text-xs text-gray-400">{student.grade} · {student.major}</p>
-              </div>
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">{student.background}</p>
-          </div>
 
-          {/* Six Dimensions */}
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(dims).map(([key, dim]) => (
-              <ProfileCard key={key} dim={dim} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ProfileCard({ dim }: { dim: StudentProfile['profile'][string] }) {
-  return (
-    <div className="bg-white rounded-2xl p-4 shadow-card border border-gray-100 hover:shadow-card-hover transition-shadow">
-      <h4 className="text-sm font-semibold text-gray-800 mb-3">{dim.label}</h4>
-      {dim.stars !== undefined && (
-        <div className="flex items-center gap-1 mb-2">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star
-              key={s}
-              className={`w-4 h-4 ${s <= dim.stars! ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`}
-            />
-          ))}
-          {dim.score !== undefined && (
-            <span className="ml-2 text-sm font-medium text-gray-700">{dim.score}/{dim.max_score}</span>
-          )}
-        </div>
-      )}
-      {dim.note && <p className="text-xs text-primary-500 mb-2">{dim.note}</p>}
-      {dim.tags && (
-        <div className="flex flex-wrap gap-1.5">
-          {dim.tags.map((tag) => (
-            <span key={tag} className="px-2 py-0.5 bg-gray-50 rounded-full text-[11px] text-gray-600 border border-gray-100">
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
+            {/* Right: Profile Draft */}
+            <div className="col-span-5">
+              <ProfileDraftPanel
+                collectedFields={Object.keys(state.collectedFields)}
+                missingFields={missingConvFields.concat(
+                  state.diagnosisEvaluated ? [] : ['diagnosis_result']
+                )}
+                allFields={ALL_FIELDS}
+                canStartDiagnosis={state.stage === 'ready_for_diagnosis'}
+                canGenerateProfile={state.stage === 'ready_for_profile'}
+                diagnosisSubmitted={state.diagnosisEvaluated}
+                onStartDiagnosis={handleStartDiagnosis}
+                onGenerateProfile={handleGenerateProfile}
+              />
+            </div>
+          </motion.div>
+        ) : (
+          /* ===== Profile Display Phase ===== */
+          <motion.div
+            key="profile-phase"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {state.finalProfile && <LearningProfileCard profile={state.finalProfile} />}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
