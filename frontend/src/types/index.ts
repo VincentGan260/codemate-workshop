@@ -110,6 +110,14 @@ export interface PathResourceItem {
   priority: '必学' | '推荐' | '拓展' | ''
 }
 
+export interface PathNodeResource {
+  resourceId: string
+  title: string
+  type: string
+  estimatedTime: string
+  source: 'resource_package' | 'default'
+}
+
 export interface PathNode {
   id: string
   name: string
@@ -117,6 +125,12 @@ export interface PathNode {
   goal: string
   duration: string
   status: 'pending' | 'in_progress' | 'completed'
+  keywords: string[]
+  learningObjectives: string[]
+  defaultResources: PathNodeResource[]
+  matchedResources: PathNodeResource[]
+  growthDimensions: { label: string; value: number }[]
+  taskDescription: string
 }
 
 export interface LearningPathResponse {
