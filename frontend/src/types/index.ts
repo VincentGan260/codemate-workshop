@@ -33,6 +33,7 @@ export interface Course {
   id: string
   name: string
   description: string
+  summary: string
   stage: string
   prerequisites: string[]
   related_courses: string[]

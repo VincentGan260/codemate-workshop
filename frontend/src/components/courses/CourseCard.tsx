@@ -22,9 +22,8 @@ export default function CourseCard({
   index,
 }: CourseCardProps) {
   const isHighlight = course.positioning === '重点演示'
-
-  // Determine visual state
   const isDimmed = anyHovered && !isHovered
+  const keywords = course.knowledge_points.slice(0, 5)
 
   return (
     <motion.button
@@ -33,7 +32,7 @@ export default function CourseCard({
       onMouseLeave={() => onHover(null)}
       className={`relative text-left rounded-2xl p-4 border bg-white
         ${isSelected
-          ? 'border-primary-300 shadow-card ring-1 ring-primary-200 bg-primary-50'
+          ? 'border-primary-300 shadow-card ring-1 ring-primary-200 bg-primary-50/50'
           : 'border-gray-100 shadow-card'
         }
       `}
@@ -41,8 +40,8 @@ export default function CourseCard({
       animate={{
         opacity: isDimmed ? 0.6 : 1,
         y: 0,
-        scale: isHovered ? 1.08 : isDimmed ? 0.96 : 1,
-        filter: isDimmed ? 'blur(2px)' : 'blur(0px)',
+        scale: isHovered ? 1.05 : isDimmed ? 0.97 : 1,
+        filter: isDimmed ? 'blur(1px)' : 'blur(0px)',
       }}
       transition={{
         duration: 0.25,
@@ -55,51 +54,41 @@ export default function CourseCard({
           : undefined,
       }}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-800 truncate">{course.name}</h3>
-          {isHighlight && <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-          {isHighlight ? (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-600 font-medium">
-              重点演示
-            </span>
-          ) : (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
-              课程群支撑
-            </span>
-          )}
-          <span className="text-[10px] text-gray-400">{course.stage}</span>
-        </div>
+      {/* Course name + highlight star */}
+      <div className="flex items-center gap-1.5 mb-2">
+        <h3 className="text-sm font-semibold text-gray-800 truncate">{course.name}</h3>
+        {isHighlight && <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
       </div>
 
-      {/* Description */}
-      <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-2.5">
-        {course.description}
-      </p>
+      {/* Stage + positioning badge */}
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <span className="text-[10px] text-gray-500">{course.stage}</span>
+        {isHighlight ? (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-600 font-medium">
+            重点演示
+          </span>
+        ) : (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+            课程群支撑
+          </span>
+        )}
+      </div>
 
-      {/* Knowledge pills */}
+      {/* Keyword chips */}
       <div className="flex flex-wrap gap-1 mb-2.5">
-        {course.knowledge_points.slice(0, 4).map((kp) => (
+        {keywords.map((kp) => (
           <span
             key={kp}
-            className="px-1.5 py-0.5 bg-gray-50 rounded-full text-[10px] text-gray-500 border border-gray-100"
+            className="px-1.5 py-0.5 bg-gray-50 rounded-full text-[10px] text-gray-600 border border-gray-100"
           >
             {kp}
           </span>
         ))}
-        {course.knowledge_points.length > 4 && (
-          <span className="text-[10px] text-gray-400">+{course.knowledge_points.length - 4}</span>
-        )}
       </div>
 
-      {/* Prerequisite hint */}
-      <p className="text-[10px] text-gray-400">
-        {course.prerequisites.length > 0
-          ? `先修：${course.prerequisites.length} 门`
-          : '入门课程 · 无先修要求'}
+      {/* One-line summary */}
+      <p className="text-[11px] text-gray-400 leading-relaxed">
+        {course.summary}
       </p>
     </motion.button>
   )

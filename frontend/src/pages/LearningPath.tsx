@@ -52,7 +52,6 @@ export default function LearningPath() {
   const addedResourceIds = useMemo(() => {
     const ids = new Set<string>()
     for (const item of pathItems) {
-      // Collect all resourceIds from the package
       ids.add(item.resourceId)
     }
     return ids
@@ -60,8 +59,6 @@ export default function LearningPath() {
 
   const handleStatusChange = useCallback((nodeId: string, status: 'pending' | 'in_progress' | 'completed') => {
     updatePathNodeStatus(nodeId, status)
-    // Force re-render by updating a dummy state — actually nodes is memo'd off pathItems
-    // We need to trigger a re-render. Let's use a separate counter.
     setPathItems((prev) => [...prev]) // trigger re-render to refresh nodes
   }, [])
 
@@ -97,7 +94,7 @@ export default function LearningPath() {
     const updated = removePathResource(resourceId)
     setPathItems(updated)
     showToast('已从资源包移除')
-  }, [showToast])
+  }, [])
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6 pb-12">
@@ -116,18 +113,19 @@ export default function LearningPath() {
         </div>
       </AnimatedSection>
 
-      {/* Main layout */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left: Overview + Timeline + Detail */}
-        <div className="col-span-8 space-y-4">
-          <AnimatedSection delay={0.05}>
-            <PathOverview
-              pathName={mockLearningPath.name}
-              nodes={nodes}
-              onStartLearning={handleStartLearning}
-            />
-          </AnimatedSection>
+      {/* Overview — full width */}
+      <AnimatedSection delay={0.05}>
+        <PathOverview
+          pathName={mockLearningPath.name}
+          nodes={nodes}
+          onStartLearning={handleStartLearning}
+        />
+      </AnimatedSection>
 
+      {/* Two-column layout: Timeline (left) + Detail & Resources (right) */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left: Timeline */}
+        <div className="col-span-7">
           <AnimatedSection delay={0.1}>
             <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -145,45 +143,47 @@ export default function LearningPath() {
               />
             </div>
           </AnimatedSection>
-
-          <AnimatedSection delay={0.15}>
-            <PathNodeDetail
-              node={selectedNode}
-              addedResourceIds={addedResourceIds}
-              onStatusChange={handleStatusChange}
-              onViewResource={setDetailResource}
-              onAddToPackage={handleAddToPackage}
-            />
-          </AnimatedSection>
         </div>
 
-        {/* Right: Resource Panel */}
-        <div className="col-span-4 space-y-3">
-          <AnimatedSection delay={0.1} direction="right">
-            <PathResourcePanel
-              items={pathItems}
-              onViewResource={setDetailResource}
-              onRemove={handleRemoveFromPackage}
-            />
-          </AnimatedSection>
+        {/* Right: Node Detail + Resource Panel */}
+        <div className="col-span-5">
+          <div className="sticky top-4 space-y-3" style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
+            <AnimatedSection delay={0.15} direction="right">
+              <PathNodeDetail
+                node={selectedNode}
+                addedResourceIds={addedResourceIds}
+                onStatusChange={handleStatusChange}
+                onViewResource={setDetailResource}
+                onAddToPackage={handleAddToPackage}
+              />
+            </AnimatedSection>
 
-          <AnimatedSection delay={0.15} direction="right">
-            <div className="bg-white rounded-2xl p-4 shadow-card border border-gray-100">
-              <span className="text-[10px] text-gray-400 block mb-2">学习状态概览</span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: '未开始', count: nodes.filter((n) => n.status === 'pending').length, color: 'text-gray-400' },
-                  { label: '学习中', count: nodes.filter((n) => n.status === 'in_progress').length, color: 'text-primary-500' },
-                  { label: '已完成', count: nodes.filter((n) => n.status === 'completed').length, color: 'text-green-500' },
-                ].map((s) => (
-                  <div key={s.label} className="text-center py-2 rounded-xl bg-gray-50">
-                    <p className={`text-lg font-bold ${s.color}`}>{s.count}</p>
-                    <p className="text-[10px] text-gray-400">{s.label}</p>
-                  </div>
-                ))}
+            <AnimatedSection delay={0.2} direction="right">
+              <PathResourcePanel
+                items={pathItems}
+                onViewResource={setDetailResource}
+                onRemove={handleRemoveFromPackage}
+              />
+            </AnimatedSection>
+
+            {/* Compact status overview */}
+            <AnimatedSection delay={0.25} direction="right">
+              <div className="bg-white rounded-2xl p-3 shadow-card border border-gray-100">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: '未开始', count: nodes.filter((n) => n.status === 'pending').length, color: 'text-gray-400' },
+                    { label: '学习中', count: nodes.filter((n) => n.status === 'in_progress').length, color: 'text-primary-500' },
+                    { label: '已完成', count: nodes.filter((n) => n.status === 'completed').length, color: 'text-green-500' },
+                  ].map((s) => (
+                    <div key={s.label} className="text-center py-1.5 rounded-xl bg-gray-50">
+                      <p className={`text-base font-bold ${s.color}`}>{s.count}</p>
+                      <p className="text-[9px] text-gray-400">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </AnimatedSection>
+            </AnimatedSection>
+          </div>
         </div>
       </div>
 

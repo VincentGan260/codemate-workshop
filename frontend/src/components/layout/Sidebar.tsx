@@ -18,6 +18,13 @@ const navItems = [
   { to: '/assessment', icon: ClipboardCheck, label: '辅导评估' },
 ]
 
+// Default current user — replace with real auth/dynamic data in future
+const currentUser = {
+  name: '李同学',
+  role: '计科 · 大二',
+  avatarText: '李',
+}
+
 export default function Sidebar() {
   const location = useLocation()
 
@@ -59,15 +66,15 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — Current User */}
       <div className="px-4 py-3 border-t border-gray-100">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary-50 to-purple-50">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-            CB
+        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-default">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold shadow-sm shrink-0">
+            {currentUser.avatarText}
           </div>
-          <div className="text-xs text-gray-500">
-            <span className="font-medium text-gray-700">CodeBuddy</span>
-            <span className="block text-[10px]">在线学习中</span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-gray-800">{currentUser.name}</p>
+            <p className="text-[10px] text-gray-400">{currentUser.role}</p>
           </div>
         </div>
       </div>
