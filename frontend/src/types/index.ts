@@ -168,3 +168,13 @@ export interface TutorChatResponse {
   recommended_resources: Array<{ title: string; url: string }>
   suggested_exercise: string
 }
+
+// ========== Assessment Context ==========
+
+export interface ConversationContext {
+  currentQuestion: string
+  pathNode: string
+  resourceCount: number
+  weakPoints: string[]
+  inferredTopics: string[]
+}
