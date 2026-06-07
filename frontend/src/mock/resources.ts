@@ -422,7 +422,7 @@ function buildRecursionDetail(type: string): DetailContent {
 function buildGenericDetail(type: string, displayTopic: string): DetailContent {
   const sections: Record<string, ResourceSection[]> = {
     '个性化讲解文档': [
-      { heading: `什么是${displayTopic}？`, content: `围绕"${displayTopic}"的核心概念与基本原理，结合李同学的学习画像，提供个性化的分步骤讲解。内容将根据学生的学习风格自动调整讲解方式。` },
+      { heading: `什么是${displayTopic}？`, content: `围绕"${displayTopic}"的核心概念与基本原理，结合当前学习者的学习画像，提供个性化的分步骤讲解。内容将根据学生的学习风格自动调整讲解方式。` },
       { heading: '核心要点', content: `本讲解文档聚焦"${displayTopic}"的关键知识点，用图示和示例帮助理解。后续接入大模型后将生成更具体的个性化内容。` },
     ],
     '知识点思维导图': [
@@ -471,7 +471,7 @@ function buildGenericDetail(type: string, displayTopic: string): DetailContent {
 // ========== Resource summary builder ==========
 
 const SUMMARIES_BT: Record<string, string> = {
-  '个性化讲解文档': '针对李同学"图示优先"的认知风格，用图示和口诀逐步讲解前序、中序、后序、层序遍历的原理与递归调用过程。',
+  '个性化讲解文档': '针对当前学习者"图示优先"的认知风格，用图示和口诀逐步讲解前序、中序、后序、层序遍历的原理与递归调用过程。',
   '知识点思维导图': '以"二叉树遍历"为中心节点，分支包括四种遍历方式、DFS/BFS对比、递归与迭代实现、常见错误。适合图示优先型学习者。',
   '代码示例与注释': '提供二叉树节点定义、前序/中序/后序遍历的递归与迭代实现，每行附详细注释，包含测试用例。',
   '分层练习题': '三层递进练习：基础层判断遍历顺序，进阶层代码补全，提高层综合应用。每题配有提示。',
@@ -494,7 +494,7 @@ function getSummary(topic: string, type: string, displayTopic: string): string {
   if (topic === 'binary-tree') return SUMMARIES_BT[type] || `关于${displayTopic}的学习资源。`
   if (topic === 'recursion') return SUMMARIES_RECURSION[type] || `关于${displayTopic}的学习资源。`
   const generic: Record<string, string> = {
-    '个性化讲解文档': `围绕"${displayTopic}"的核心概念与原理，结合李同学的学习画像，提供个性化的分步骤讲解内容。`,
+    '个性化讲解文档': `围绕"${displayTopic}"的核心概念与原理，结合当前学习者的学习画像，提供个性化的分步骤讲解内容。`,
     '知识点思维导图': `系统梳理"${displayTopic}"的知识体系，以结构化导图帮助建立整体认知。`,
     '代码示例与注释': `提供"${displayTopic}"相关的 Python 代码示例，每行附详细中文注释。`,
     '分层练习题': `从基础到综合的分层练习，帮助逐步掌握"${displayTopic}"。`,
@@ -552,7 +552,7 @@ export function generateResourcesForTopicMock(
       language: meta.language,
       teaching_style: meta.teaching_style,
       summary: getSummary(normalized, meta.key, displayTopic),
-      match_reason: `匹配李同学的"${meta.teaching_style}"偏好和薄弱点`,
+      match_reason: `匹配当前学习者的"${meta.teaching_style}"偏好和薄弱点`,
       learning_objectives: detail.learning_objectives,
       sections: detail.sections,
       key_concepts: detail.key_concepts,
@@ -561,7 +561,7 @@ export function generateResourcesForTopicMock(
       profile_dimension: detail.profile_dimension,
       next_steps: detail.next_steps,
       estimated_time: meta.estimated_time,
-      student_name: '李同学',
+      student_name: '当前学习者',
       generated_at: new Date().toLocaleString('zh-CN'),
       added_to_path: false,
     }

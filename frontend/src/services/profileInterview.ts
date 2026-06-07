@@ -254,7 +254,7 @@ export function generateFinalProfileMock(
   // Adjust knowledge_base based on diagnosis
   if (profile.knowledge_base && diagnosisResults) {
     const kb = profile.knowledge_base
-    const newScore = Math.max(30, Math.min(100, (kb.score || 62) + diagnosisResults.knowledgeBaseAdjust))
+    const newScore = Math.max(30, Math.min(100, (kb.score ?? 0) + diagnosisResults.knowledgeBaseAdjust))
     kb.score = newScore
     kb.stars = scoreToStars(newScore)
     kb.note = diagnosisResults.note
@@ -264,7 +264,7 @@ export function generateFinalProfileMock(
   // Adjust practice_ability based on diagnosis
   if (profile.practice_ability && diagnosisResults) {
     const pa = profile.practice_ability
-    const newScore = Math.max(30, Math.min(100, (pa.score || 58) + diagnosisResults.practiceAbilityAdjust))
+    const newScore = Math.max(30, Math.min(100, (pa.score ?? 0) + diagnosisResults.practiceAbilityAdjust))
     pa.score = newScore
     pa.stars = scoreToStars(newScore)
     pa.note = diagnosisResults.note

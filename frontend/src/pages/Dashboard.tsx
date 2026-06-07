@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { getCourses } from '../services/api'
 import type { Course } from '../types'
+import { isDemoMode } from '../config/appConfig'
 import AnimatedSection from '../components/common/AnimatedSection'
 
 const flowSteps = [
@@ -258,58 +259,71 @@ export default function Dashboard() {
       <AnimatedSection delay={0.25}>
         <div className="flex items-center gap-2 mb-4">
           <Zap className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-800">默认演示场景</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            {isDemoMode() ? '默认演示场景' : '开始学习'}
+          </h2>
         </div>
-        <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-2xl p-6 border border-primary-100/50">
-          {/* Student info row */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-              李
+
+        {isDemoMode() ? (
+          /* Demo Mode: Li classmate scenario */
+          <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-2xl p-6 border border-primary-100/50">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                李
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  李同学
+                  <span className="text-xs text-gray-400 font-normal ml-2">
+                    计算机科学与技术专业 · 大二
+                  </span>
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  程序设计基础 → 数据结构与算法
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-800">
-                李同学
-                <span className="text-xs text-gray-400 font-normal ml-2">
-                  计算机科学与技术专业 · 大二
-                </span>
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                程序设计基础 → 数据结构与算法
-              </p>
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+              李同学正从<strong className="text-gray-800">程序设计基础</strong>过渡到
+              <strong className="text-gray-800">数据结构与算法</strong>的学习，
+              她对<strong className="text-primary-600">函数调用</strong>、
+              <strong className="text-primary-600">递归</strong>、
+              <strong className="text-primary-600">数组操作</strong>和
+              <strong className="text-primary-600">二叉树遍历</strong>理解不够清晰，
+              偏好图示讲解、代码案例和分层练习题。
+            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-gray-400 font-medium">学习难点</span>
+                {['函数调用', '递归', '数组操作', '二叉树遍历'].map((tag) => (
+                  <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-primary-600 text-[11px] font-medium border border-primary-100">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-gray-400 font-medium">偏好方式</span>
+                {['图示讲解', '代码案例', '分层练习'].map((tag) => (
+                  <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-purple-600 text-[11px] font-medium border border-purple-100">
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Scenario description */}
-          <p className="text-sm text-gray-600 leading-relaxed mb-4">
-            李同学正从<strong className="text-gray-800">程序设计基础</strong>过渡到
-            <strong className="text-gray-800">数据结构与算法</strong>的学习，
-            她对<strong className="text-primary-600">函数调用</strong>、
-            <strong className="text-primary-600">递归</strong>、
-            <strong className="text-primary-600">数组操作</strong>和
-            <strong className="text-primary-600">二叉树遍历</strong>理解不够清晰，
-            偏好图示讲解、代码案例和分层练习题。
-          </p>
-
-          {/* Tags */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-gray-400 font-medium">学习难点</span>
-              {['函数调用', '递归', '数组操作', '二叉树遍历'].map((tag) => (
-                <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-primary-600 text-[11px] font-medium border border-primary-100">
-                  {tag}
-                </span>
-              ))}
+        ) : (
+          /* Real Mode: generic guide */
+          <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-2xl p-6 border border-primary-100/50 text-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-purple-500 flex items-center justify-center mx-auto mb-3">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-gray-400 font-medium">偏好方式</span>
-              {['图示讲解', '代码案例', '分层练习'].map((tag) => (
-                <span key={tag} className="px-2 py-0.5 rounded-full bg-white/80 text-purple-600 text-[11px] font-medium border border-purple-100">
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <p className="text-sm font-semibold text-gray-800 mb-1">从你的课程和学习问题开始</p>
+            <p className="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">
+              先去<Link to="/profile" className="text-primary-500 font-medium hover:underline">学习画像</Link>告诉 CodeBuddy 你的基础和目标，
+              系统将为你生成专属的学习资源与路径规划。
+            </p>
           </div>
-        </div>
+        )}
       </AnimatedSection>
     </div>
   )

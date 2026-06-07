@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Sparkles,
 } from 'lucide-react'
+import { getCurrentUserDisplay } from '../../config/appConfig'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: '首页' },
@@ -18,15 +19,9 @@ const navItems = [
   { to: '/assessment', icon: ClipboardCheck, label: '辅导评估' },
 ]
 
-// Default current user — replace with real auth/dynamic data in future
-const currentUser = {
-  name: '李同学',
-  role: '计科 · 大二',
-  avatarText: '李',
-}
-
 export default function Sidebar() {
   const location = useLocation()
+  const currentUser = getCurrentUserDisplay()
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[240px] bg-white border-r border-gray-200 flex flex-col z-40 shadow-sm">

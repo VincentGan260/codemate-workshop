@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, CheckCircle2, Loader2, Brain, GitBranch, FileText, Code, ClipboardCheck } from 'lucide-react'
+import { getStudentDisplayName } from '../../config/appConfig'
 
 interface AgentStep {
   key: string
@@ -11,38 +12,41 @@ interface AgentStep {
   description: string
 }
 
-const AGENT_STEPS: AgentStep[] = [
-  {
-    key: 'diagnosis', label: '诊断分析', agent: 'Diagnosis Agent',
-    icon: Brain,
-    color: 'text-blue-500',
-    description: '分析李同学的学习画像与薄弱点...',
-  },
-  {
-    key: 'course-map', label: '课程映射', agent: 'Course Map Agent',
-    icon: GitBranch,
-    color: 'text-purple-500',
-    description: '匹配课程知识图谱与先修关系...',
-  },
-  {
-    key: 'resource', label: '资源生成', agent: 'Resource Agent',
-    icon: FileText,
-    color: 'text-primary-500',
-    description: '根据画像与风格定制学习资源...',
-  },
-  {
-    key: 'code-practice', label: '代码练习', agent: 'Code Practice Agent',
-    icon: Code,
-    color: 'text-emerald-500',
-    description: '生成配套代码示例与注释...',
-  },
-  {
-    key: 'assessment', label: '评估校验', agent: 'Assessment Agent',
-    icon: ClipboardCheck,
-    color: 'text-amber-500',
-    description: '校验资源难度匹配与知识点覆盖...',
-  },
-]
+function getAgentSteps(): AgentStep[] {
+  const student = getStudentDisplayName()
+  return [
+    {
+      key: 'diagnosis', label: '诊断分析', agent: 'Diagnosis Agent',
+      icon: Brain,
+      color: 'text-blue-500',
+      description: `分析${student}的学习画像与薄弱点...`,
+    },
+    {
+      key: 'course-map', label: '课程映射', agent: 'Course Map Agent',
+      icon: GitBranch,
+      color: 'text-purple-500',
+      description: '匹配课程知识图谱与先修关系...',
+    },
+    {
+      key: 'resource', label: '资源生成', agent: 'Resource Agent',
+      icon: FileText,
+      color: 'text-primary-500',
+      description: `根据${student === '李同学' ? student + '的画像' : '画像'}与风格定制学习资源...`,
+    },
+    {
+      key: 'code-practice', label: '代码练习', agent: 'Code Practice Agent',
+      icon: Code,
+      color: 'text-emerald-500',
+      description: '生成配套代码示例与注释...',
+    },
+    {
+      key: 'assessment', label: '评估校验', agent: 'Assessment Agent',
+      icon: ClipboardCheck,
+      color: 'text-amber-500',
+      description: '校验资源难度匹配与知识点覆盖...',
+    },
+  ]
+}
 
 interface AgentGenerationStatusProps {
   active: boolean
@@ -60,20 +64,21 @@ export default function AgentGenerationStatus({ active, onComplete }: AgentGener
       return
     }
 
+    const steps = getAgentSteps()
     let step = 0
     setCurrentStep(0)
 
     const interval = setInterval(() => {
       setCompletedSteps((prev) => {
         const next = new Set(prev)
-        if (step < AGENT_STEPS.length) {
-          next.add(AGENT_STEPS[step].key)
+        if (step < steps.length) {
+          next.add(steps[step].key)
         }
         return next
       })
 
       step++
-      if (step < AGENT_STEPS.length) {
+      if (step < steps.length) {
         setCurrentStep(step)
       } else {
         clearInterval(interval)
@@ -98,7 +103,7 @@ export default function AgentGenerationStatus({ active, onComplete }: AgentGener
       </div>
 
       <div className="space-y-0.5">
-        {AGENT_STEPS.map((step, i) => {
+        {getAgentSteps().map((step, i) => {
           const Icon = step.icon
           const isCompleted = completedSteps.has(step.key)
           const isCurrent = i === currentStep

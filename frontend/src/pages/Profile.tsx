@@ -6,6 +6,7 @@ import ChatPanel from '../components/profile/ChatPanel'
 import ProfileDraftPanel from '../components/profile/ProfileDraftPanel'
 import DiagnosisQuiz from '../components/profile/DiagnosisQuiz'
 import LearningProfileCard from '../components/profile/LearningProfileCard'
+import { isDemoMode } from '../config/appConfig'
 import {
   createInitialState,
   processMessage,
@@ -29,7 +30,8 @@ export default function Profile() {
   const missingConvFields = conversationFields.filter((k) => !(k in state.collectedFields))
 
   const isChatActive = state.stage === 'collecting' || state.stage === 'greeting'
-  const showDemoBtn = state.stage === 'collecting' && Object.keys(state.collectedFields).length === 0
+  const demoMode = isDemoMode()
+  const showDemoBtn = demoMode && state.stage === 'collecting' && Object.keys(state.collectedFields).length === 0
 
   // ---- Handlers ----
 

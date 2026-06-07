@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Sparkles, Code, BookOpen, Lightbulb, MessageCircle } from 'lucide-react'
 import type { TutorChatResponse, ConversationContext } from '../../types'
 import { getTutorResponse, getContextualExampleQuestions, inferConversationContextMock } from '../../mock/assessment'
+import { isDemoMode } from '../../config/appConfig'
 import SuggestedQuestions from './SuggestedQuestions'
 
 interface TutorChatWindowProps {
@@ -181,7 +182,7 @@ export default function TutorChatWindow({ onQuestionAsked, onViewResource }: Tut
 
               {msg.role === 'user' && (
                 <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-[10px] text-gray-500 font-medium">李</span>
+                  <span className="text-[10px] text-gray-500 font-medium">{isDemoMode() ? '李' : '你'}</span>
                 </div>
               )}
             </motion.div>
